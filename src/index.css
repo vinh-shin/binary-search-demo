@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+html { scroll-behavior: smooth; }
+.katex-display { overflow-x: auto; overflow-y: hidden; padding: 4px 0; }
+input[type=range] { accent-color: #4f46e5; }

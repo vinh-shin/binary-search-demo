@@ -1,0 +1,11 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // Worker chỉ phục vụ static assets (bản build Vite trong dist/), không có code Worker riêng.
+  "name": "binary-search",
+  "compatibility_date": "2026-10-15",
+  "assets": {
+    "directory": "./dist",
+    // Trang dùng hash routing (#thuat-toan, ...) nên mọi đường dẫn lạ đều trả về index.html
+    "not_found_handling": "single-page-application"
+  }
+}

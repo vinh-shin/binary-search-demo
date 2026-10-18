@@ -1,136 +1,153 @@
-import { Card, Section } from '../components/ui'
+import { Section } from '../components/ui'
 
-const STRENGTHS = [
-  'Ý tưởng đơn giản, dễ cài đặt, vẫn giữ cấu trúc đệ quy của bisection. Chỉ có một tham số α điều khiển trade-off.',
-  'Cách nhìn lỗi qua ô Voronoi trong không gian đo rất trực quan. Chứng minh Theorem 1 bằng lập luận đối xứng/phản xạ gọn và đúng.',
-  'log Pₑ giảm gần tuyến tính theo β (Fig. 4), nên trade-off mượt và dự đoán được.',
-  'Heuristic đặt cảm biến "giữa vùng riêng" có trực giác tốt và bám sát điểm tối ưu.',
+// Nhược điểm của Algorithm 1 và hướng cải thiện tương ứng (không đánh giá cách trình bày của bài báo).
+const SEVERITY = {
+  'Nghiêm trọng': 'bg-rose-100 text-rose-800',
+  'Trung bình': 'bg-amber-100 text-amber-800',
+  Nhỏ: 'bg-slate-200 text-slate-700',
+}
+
+const GROUPS = [
+  {
+    title: 'Nhược điểm về cơ chế hoạt động',
+    items: [
+      {
+        name: 'Không có bộ nhớ, bỏ phí thông tin của phép đo',
+        severity: 'Nghiêm trọng',
+        priority: 1,
+        problem:
+          'Hàm hợp lý (4) chỉ dùng phép đo của bước hiện tại. Sau β bước có β·|S| phép đo nhưng mỗi quyết định chỉ dựa trên |S| phép đo. Mỗi phép đo là một giá trị analog chứa nhiều thông tin về vị trí, nhưng chỉ được dùng để quyết định 1 bit (trái hay phải) rồi bị bỏ đi.',
+        evidence: ['Demo 2', '#thuat-toan', 'likelihood được tính lại từ đầu ở mỗi bước'],
+        fix: 'Duy trì phân phối hậu nghiệm trên toàn lưới, π^t(k) ∝ π^(t−1)(k)·p(z^t | k), và cộng dồn bằng chứng qua các bước như chia đôi xác suất (Horstein).',
+      },
+      {
+        name: 'Quyết định cứng, không sửa được lỗi',
+        severity: 'Nghiêm trọng',
+        priority: 1,
+        problem:
+          'Một khi mục tiêu bị loại khỏi H^t thì không thể quay lại. Chồng lấn chỉ giảm xác suất loại oan, không khôi phục được khi đã sai; mọi bước sau đó đều vô nghĩa.',
+        evidence: ['Demo 2', '#thuat-toan', 'bảng ghi "đã mất ở bước t", các bước sau không thể sửa'],
+        fix: 'Thay vùng ứng viên bằng tập tin cậy nhỏ nhất có xác suất hậu nghiệm ≥ 1 − ε_t: vị trí bị loại vẫn còn xác suất khác 0 nên có thể quay lại, và P_e ≲ Σ ε_t. Có thể thêm bước kiểm chứng và quay lui lên nút cha như các thuật toán tìm kiếm nhị phân có nhiễu.',
+      },
+      {
+        name: 'Quy tắc chọn nửa không tối ưu, chưa xác định cách phá hòa',
+        severity: 'Trung bình',
+        priority: 2,
+        problem:
+          'Quy tắc (5) giữ nửa chứa điểm hợp lý cực đại. Để cực tiểu Pr(l_T ∉ H^t) thì cần chọn nửa có tổng xác suất hậu nghiệm lớn hơn. Khi điểm hợp lý cực đại nằm trong vùng chồng lấn, hai nửa hòa nhau mà thuật toán không nói cách phá hòa.',
+        evidence: ['Demo 3', '#voronoi', 'các ô Voronoi của điểm vùng giao (màu tím) nằm cả hai phía đường chéo'],
+        fix: 'Chọn H^t = argmax_i Σ_{k∈H_i} π(k)·p(z^t | k). Quy tắc này tối ưu Bayes cho từng bước, không còn trường hợp hòa (vùng chồng lấn được cộng cho cả hai nửa), và chi phí tính toán không đổi.',
+      },
+      {
+        name: 'Độ chồng lấn α cố định cho mọi bước',
+        severity: 'Trung bình',
+        priority: 2,
+        problem:
+          'Cùng một α được dùng từ đầu đến cuối, trong khi khả năng phân biệt thay đổi theo kích thước vùng: ở các bước cuối vùng nhỏ, các giả thuyết cho phép đo gần giống nhau nên dễ sai hơn.',
+        evidence: ['Demo 2b', '#thuat-toan', 'P_e^t tăng trở lại ở các bước cuối'],
+        fix: 'Chọn α_t theo từng bước bằng cách cân bằng lượng lỗi giảm được trên mỗi bit thông tin giữa các bước (điều kiện tối ưu dựa trên Remark 2); hoặc quyết định độ chồng lấn sau khi đo theo tỉ số log hợp lý giữa hai phần riêng, đo thêm khi còn mơ hồ (kiểm định tuần tự của Wald).',
+      },
+      {
+        name: 'Phụ thuộc mạnh vào vị trí cảm biến và mô hình lý tưởng',
+        severity: 'Trung bình',
+        priority: 3,
+        problem:
+          'Hiệu quả của chồng lấn đổi hẳn theo cách đặt cảm biến: cảm biến cố định tạo ra đoạn nằm ngang, tăng α không giảm lỗi. Thuật toán còn giả định đặt được cảm biến ở đúng vị trí đối xứng, biết chính xác f, P₀, η, σ, nhiễu độc lập Gauss và mục tiêu đứng yên.',
+        evidence: ['Demo 4', '#voronoi', 'đoạn nằm ngang khi cảm biến cố định; Demo 3 chế độ cảm biến lệch'],
+        fix: 'Tối ưu đồng thời α và vị trí cảm biến (do đối xứng chỉ còn một biến, quét lưới là đủ); khi cảm biến rải cố định, chọn cảm biến sẵn có gần vị trí lý tưởng nhất; dùng hiệu z₁ − z₂ để triệt tiêu P₀ chưa biết.',
+      },
+    ],
+  },
+  {
+    title: 'Hạn chế về phân tích lỗi',
+    items: [
+      {
+        name: 'Không dự đoán chính xác được lỗi tổng',
+        severity: 'Trung bình',
+        priority: 3,
+        problem:
+          'Công thức (1) nhân các P_e^t tính với phân phối đều trên H^(t−1), chỉ đúng ở bước đầu. Từ bước 2, lỗi thật lệch tới +49% hoặc −32% theo cả hai chiều tùy α, nên (1) không phải cận trên cũng không phải cận dưới.',
+        evidence: ['Demo 2b', '#thuat-toan', 'bước 1 khớp, từ bước 2 lệch theo cả hai chiều'],
+        fix: 'Theo dõi phân bố có điều kiện thật của mục tiêu qua các bước bằng truy hồi ρ^t(k) ∝ ρ^(t−1)(k)·(1 − Pr(loại k ở bước t)), hoặc chứng minh cận trên và cận dưới cho sai lệch.',
+      },
+      {
+        name: 'Công thức đóng chỉ cho hai cảm biến đối xứng',
+        severity: 'Trung bình',
+        priority: 3,
+        problem:
+          'Định lý 1 cần đúng hai cảm biến đặt đối xứng. Với nhiều cảm biến hơn hoặc đặt lệch, chỉ còn Bổ đề 1, tức tích phân Gauss trên hợp các ô Voronoi, không có công thức và không có cận.',
+        evidence: ['Demo 3', '#voronoi', 'chế độ cảm biến lệch: biên quyết định thành đường gấp khúc'],
+        fix: 'Dùng cận hợp theo cặp: P_e^t ≤ (2/|H|)·Σ_{k∈H₁∖H₂} Σ_{k″∈H₂∖H₁} Q(‖h_k − h_k″‖ / 2σ), đúng với số cảm biến và vị trí bất kỳ, tính được trong O(|H|²).',
+      },
+      {
+        name: 'Lợi ích của chồng lấn không giảm đều theo α',
+        severity: 'Nhỏ',
+        priority: 3,
+        problem:
+          'Remark 2 cho đạo hàm −2Q(·), lớn nhất tại α = 0, nhưng đạo hàm không đơn điệu: gần bằng 0 quanh α ≈ ¼ (mép phần riêng đi qua cảm biến) rồi tăng lại. Công thức cũng không áp dụng được khi cảm biến dịch theo α.',
+        evidence: ['Demo 4', '#voronoi', 'đường đạo hàm gần 0 quanh α = ¼'],
+        fix: 'Khi cảm biến cố định, tránh chọn α trong vùng phẳng; khi cảm biến dịch theo α, tính lại đạo hàm có thêm số hạng ∂s/∂α và dùng nó trong bài toán chọn α_t ở trên.',
+      },
+    ],
+  },
 ]
 
-const WEAKNESSES = [
-  {
-    group: 'Thực nghiệm',
-    items: [
-      ['Không có baseline', 'Bài báo nói vượt các phương pháp lặp truy vấn, Horstein/PBA, Karp–Kleinberg nhưng không so sánh với phương pháp nào.'],
-      ['Ngân sách đo không đồng đều', 'Fig. 4 so α = 0.25 (33 bước) với α = 0 (14 bước), tức số phép đo khác nhau khoảng 2.4 lần.'],
-      ['Không có Monte Carlo', 'Mọi số liệu đều tính từ chính công thức giải tích. Demo 2b (tab Thuật toán) cho thấy từ bước 2, P_e^t thực tế lệch khỏi lý thuyết theo cả hai chiều.'],
-      ['Chỉ có 1D', 'Bài toán được đặt ra và phân tích cho 2D, nhưng toàn bộ thực nghiệm chỉ làm 1D.'],
-      ['Số liệu Fig. 4 khó hiểu', 'Với n⁽⁰⁾ = 2¹⁴ và n⁽ᵝ⁾ = 2⁷, theo Eq. (3) thì β ∈ [7, 17], không phải [14, 33].'],
-      ['Phạm vi α không nhất quán', 'α được định nghĩa trong [0, ¼) nhưng Fig. 2, 5 vẽ tới 0.5. Khi α → 0.5, Pₑ → 0 là kết quả tầm thường.'],
-      ['EA không cần thiết', 'Bài toán đặt cảm biến đối xứng chỉ có 1 biến, quét lưới là đủ và cho đúng tối ưu toàn cục.'],
-    ],
-  },
-  {
-    group: 'Lý thuyết',
-    items: [
-      ['Giả định prior đều ở mỗi bước', 'Khi điều kiện hóa trên việc các bước trước đã đúng, posterior không còn đều. Vì vậy Eq. (1) chỉ là xấp xỉ, không phải cận trên cũng không phải cận dưới.'],
-      ['Không có bộ nhớ', 'Likelihood được tính lại từ đầu ở mỗi bước, bỏ phí thông tin analog từ các phép đo trước. Probabilistic Bisection (Horstein) giữ posterior nên tận dụng được thông tin này.'],
-      ['Closed form rất hẹp', 'Chỉ có cho 2 cảm biến đối xứng. Trường hợp tổng quát chỉ còn Lemma 1, phải tính tích phân trên đa diện Voronoi.'],
-      ['Giả định biết hết', 'f(·), σ và vị trí cảm biến đều được giả định biết chính xác, và cảm biến đặt được ở bất kỳ đâu. Bài không phân tích trường hợp mô hình sai.'],
-      ['Remark 2 bị giới hạn', 'Đạo hàm chỉ đúng khi cảm biến cố định. Với vị trí phụ thuộc α thì thiếu số hạng ∂s/∂α.'],
-      ['Không có kết quả tối ưu', 'Bài không trả lời α* là gì cho ngân sách cho trước, cũng không so với cận thông tin (Burnashev–Zigangirov).'],
-    ],
-  },
-  {
-    group: 'Trình bày',
-    items: [
-      ['Thiếu tài liệu liên quan', 'Feige et al. (1994, backtracking), Ben-Or & Hassidim (2008), Waeber–Frazier–Henderson (PBA, 2013), Jedynak–Frazier–Sznitman (Twenty Questions with Noise).'],
-      ['Eq. (9) mơ hồ', 'Không rõ nhiễu được cộng ở miền dB hay miền tuyến tính, mà hai cách cho kết quả rất khác nhau.'],
-      ['Phụ thuộc appendix', 'Phần lớn chi tiết nằm ở appendix và được tham chiếu tới chính bản arXiv [19].'],
-    ],
-  },
-]
-
-const IMPROVEMENTS = [
-  {
-    group: 'Thuật toán',
-    items: [
-      ['α thích nghi theo bước', 'Chọn αₜ theo SNR, theo margin của likelihood, hoặc theo kích thước còn lại. Các bước cuối có thể cần overlap nhiều hơn.'],
-      ['Overlap + posterior Bayes', 'Giữ posterior qua các bước thay vì ML độc lập ở từng bước.'],
-      ['Số phép đo thích nghi (SPRT)', 'Đo tiếp cho tới khi đủ tự tin rồi mới cắt.'],
-      ['Backtracking', 'Cho phép mở rộng lại vùng khi phép đo mới mâu thuẫn với vùng hiện tại.'],
-      ['Phân hoạch k-ary chồng lấn', 'Chia thành nhiều hơn 2 phần, hoặc dùng α khác nhau cho từng chiều.'],
-      ['Quy tắc chọn khác', 'Dùng tổng likelihood hoặc MAP thay cho max.'],
-      ['Tối ưu đồng thời', 'Tối ưu cùng lúc α, vị trí và số cảm biến dưới ràng buộc năng lượng.'],
-    ],
-  },
-  {
-    group: 'Lý thuyết',
-    items: [
-      ['α* tối ưu', 'Tìm α* cho bài toán min Pₑ với tổng số phép đo cố định, và so với cận thông tin.'],
-      ['Pₑ chính xác', 'Dùng posterior thực thay cho prior đều, hoặc đưa ra cận trên/dưới cho Pₑ.'],
-      ['Mở rộng mô hình', 'Nhiều cặp cảm biến, nhiễu tương quan, nhiễu non-Gaussian, cấu hình không đối xứng.'],
-    ],
-  },
-  {
-    group: 'Thực nghiệm',
-    items: [
-      ['Kiểm chứng MC', 'Chạy Monte Carlo để kiểm chứng Theorem 1 và Corollary 2 (Demo 3 và Đồ thị D đã làm).'],
-      ['Baseline cùng ngân sách', 'So với lặp phép đo, PBA và Karp–Kleinberg ở cùng số phép đo.'],
-      ['2D thực tế', 'Cảm biến cố định trên lưới, có sai lệch mô hình (η, σ không đúng).'],
-      ['Pareto 3 chiều', 'Vẽ đường biên Pareto giữa (β, |Hᵝ|, Pₑ).'],
-    ],
-  },
-]
+function WeaknessCard({ idx, w }) {
+  const [demo, href, note] = w.evidence
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-5 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <h4 className="font-semibold text-slate-900">
+          <span className="font-mono text-slate-400 mr-1">{idx}.</span>
+          {w.name}
+        </h4>
+        <div className="flex gap-1.5 shrink-0">
+          <span className={`text-xs px-2 py-0.5 rounded-full ${SEVERITY[w.severity]}`}>{w.severity}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800">Ưu tiên {w.priority}</span>
+        </div>
+      </div>
+      <p className="text-sm text-slate-700 leading-relaxed">{w.problem}</p>
+      <p className="text-xs text-slate-500">
+        Bằng chứng:{' '}
+        <a href={href} className="text-indigo-700 font-medium hover:underline">
+          {demo}
+        </a>{' '}
+        ({note})
+      </p>
+      <div className="mt-auto rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm text-emerald-950">
+        <span className="font-semibold">Hướng cải thiện: </span>
+        {w.fix}
+      </div>
+    </div>
+  )
+}
 
 export default function Review() {
+  let n = 0
   return (
     <Section
       id="review"
-      num="06"
-      title="Đánh giá: điểm mạnh, điểm yếu và hướng cải thiện"
-      subtitle="Nhận xét phản biện về bài báo, kèm các hướng có thể phát triển tiếp."
+      num="04"
+      title="Đánh giá thuật toán: nhược điểm và hướng cải thiện"
+      subtitle="Mỗi nhược điểm của Algorithm 1 đi kèm bằng chứng từ các demo và một hướng cải thiện tương ứng."
     >
-      <div className="grid lg:grid-cols-3 gap-6 mb-6">
-        <Card title="✅ Điểm mạnh" className="lg:col-span-1">
-          <ul className="space-y-2 text-sm text-slate-700 list-disc ml-4">
-            {STRENGTHS.map((s) => (
-              <li key={s}>{s}</li>
+      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-4 mb-8 text-sm text-indigo-950 leading-relaxed">
+        <b>Thứ tự ưu tiên.</b> (1) Thêm bộ nhớ và quyết định mềm: hai nhược điểm nghiêm trọng nhất có chung một lời
+        giải, giữ phân phối hậu nghiệm và dùng tập tin cậy, khi đó vùng chồng lấn tự co giãn theo độ mơ hồ của phép đo.
+        (2) Đổi quy tắc chọn nửa sang tổng xác suất hậu nghiệm và chọn α thích nghi theo bước. (3) Các cải tiến về cảm
+        biến và về phân tích lỗi. Mọi cải tiến nên được so sánh với thuật toán gốc ở <b>cùng tổng số phép đo</b>, vì α
+        lớn hơn luôn tốn thêm bước.
+      </div>
+      {GROUPS.map((g) => (
+        <div key={g.title} className="mb-10">
+          <h3 className="text-xl font-bold text-slate-900 mb-4">{g.title}</h3>
+          <div className="grid lg:grid-cols-2 gap-5">
+            {g.items.map((w) => (
+              <WeaknessCard key={w.name} idx={++n} w={w} />
             ))}
-          </ul>
-        </Card>
-        <Card title="🎯 Tóm tắt" className="lg:col-span-2 bg-indigo-50 border-indigo-200">
-          <p className="text-sm text-slate-700 leading-relaxed">
-            Ý tưởng đơn giản và có phân tích hình học đẹp. Điểm yếu lớn nhất là bài <b>không có baseline</b> và{' '}
-            <b>không so sánh ở cùng ngân sách phép đo</b>, nên chưa thể kết luận overlap tốt hơn việc dùng chính số phép đo đó
-            để lặp lại truy vấn hoặc cập nhật posterior. Ngoài ra, Algorithm 1 chỉ lấy 1 bit từ mỗi phép đo
-            analog rồi bỏ đi. Hướng cải tiến có giá trị nhất là <b>α thích nghi kết hợp cập nhật posterior</b>, đánh
-            giá ở cùng ngân sách đo so với PBA.
-          </p>
-        </Card>
-      </div>
-
-      <h3 className="text-xl font-bold text-slate-900 mb-3">⚠️ Điểm yếu và hạn chế</h3>
-      <div className="grid lg:grid-cols-3 gap-6 mb-10">
-        {WEAKNESSES.map((g) => (
-          <Card key={g.group} title={g.group}>
-            <ul className="space-y-3 text-sm">
-              {g.items.map(([t, d]) => (
-                <li key={t}>
-                  <div className="font-semibold text-rose-800">{t}</div>
-                  <div className="text-slate-600">{d}</div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ))}
-      </div>
-
-      <h3 className="text-xl font-bold text-slate-900 mb-3">🚀 Hướng cải thiện</h3>
-      <div className="grid lg:grid-cols-3 gap-6">
-        {IMPROVEMENTS.map((g) => (
-          <Card key={g.group} title={g.group}>
-            <ul className="space-y-3 text-sm">
-              {g.items.map(([t, d]) => (
-                <li key={t}>
-                  <div className="font-semibold text-emerald-800">{t}</div>
-                  <div className="text-slate-600">{d}</div>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        ))}
-      </div>
+          </div>
+        </div>
+      ))}
     </Section>
   )
 }

@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, ErrorBar, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { DEFAULT_PARAMS, peStepDiscrete, sizeSequence } from '../lib/model'
 import { useMC } from '../lib/useMC'
-import { Button, Callout, Card, Progress, Select, Slider, TeX, fmtP } from '../components/ui'
+import { Button, Card, Progress, Select, Slider, fmtP } from '../components/ui'
+import { THEORY } from '../theory'
 
 const L0 = 500
 
@@ -53,14 +54,12 @@ export default function StepMCDemo() {
   }
 
   return (
-    <Card title="Demo 2b · Mục tiêu bị mất ở bước nào? Kiểm chứng giả định prior đều bằng Monte Carlo">
+    <Card title="Demo 2b · Mục tiêu bị mất ở bước nào? Kiểm chứng giả định prior đều bằng Monte Carlo" info={THEORY.demo2b}>
       <p className="text-sm text-slate-600 mb-4">
-        Theorem 1 tính <TeX>{'P_e^t'}</TeX> với giả định mục tiêu phân bố <b>đều</b> trên{' '}
-        <TeX>{'\\mathcal H^{t-1}'}</TeX>, rồi Eq. (1) nhân các bước lại. Demo này chạy Algorithm 1 nhiều lần với mục
-        tiêu ngẫu nhiên, đếm số mục tiêu bị loại ở mỗi bước, rồi tính tỉ lệ lỗi <b>có điều kiện</b>: số bị loại ở bước
-        t chia cho số mục tiêu còn sống trước bước t. Cảm biến đặt theo heuristic s = (L/2)(½ − α).
+        Chọn tham số rồi bấm <b>Chạy Monte Carlo</b>: cột đỏ là xác suất lỗi từng bước theo lý thuyết, cột xanh là tỉ lệ
+        lỗi thực tế đo được qua nhiều lần chạy.
       </p>
-      <div className="grid md:grid-cols-6 gap-4 mb-4 items-end">
+      <div className="grid grid-cols-2 @3xl:grid-cols-6 gap-4 mb-4 items-end">
         <Select label="n⁽⁰⁾" value={n0} onChange={setN0} options={['256', '1024', '4096'].map((v) => ({ value: v, label: v }))} />
         <Slider label="α" value={alpha} min={0} max={0.24} step={0.01} onChange={setAlpha} format={(v) => v.toFixed(2)} />
         <Slider label="σ" value={sigma} min={0.1} max={1.2} step={0.05} onChange={setSigma} format={(v) => v.toFixed(2)} />
@@ -96,14 +95,14 @@ export default function StepMCDemo() {
           <Bar isAnimationActive={false} dataKey="theory" name="Lý thuyết (Theorem 1, prior đều)" fill="#dc2626" />
           {res && (
             <Bar isAnimationActive={false} dataKey="emp" name="Monte Carlo (có điều kiện)" fill="#2563eb">
-              <ErrorBar dataKey="ci" width={4} stroke="#0f172a" />
+              <ErrorBar isAnimationActive={false} dataKey="ci" width={4} stroke="#0f172a" />
             </Bar>
           )}
         </BarChart>
       </ResponsiveContainer>
       <div className="text-xs text-slate-500 mb-4">Vạch đen trên cột xanh là khoảng tin cậy 95% của ước lượng Monte Carlo.</div>
 
-      <div className="grid lg:grid-cols-[1fr_380px] gap-6">
+      <div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -148,28 +147,6 @@ export default function StepMCDemo() {
             <div className="text-xs text-amber-700 mt-2">Tham số đã thay đổi. Bấm chạy lại để cập nhật kết quả Monte Carlo.</div>
           )}
         </div>
-        <Callout type="info" title="Cách đọc kết quả">
-          <p>
-            <b>Bước 1:</b> MC khớp lý thuyết, vì lúc này mục tiêu thực sự phân bố đều. Với vài nghìn lần chạy, lệch vài
-            phần trăm là dao động thống kê bình thường.
-          </p>
-          <p>
-            <b>Từ bước 2:</b> MC lệch khỏi lý thuyết. Ở mỗi bước, các mục tiêu nằm sát mép trong của vùng riêng (gần
-            điểm cắt) dễ bị chọn sai nhất và đã bị loại một phần, nên vùng đó bị "hao hụt". Chiều lệch phụ thuộc vào chỗ
-            vùng hao hụt rơi vào trong khoảng mới:
-          </p>
-          <p>
-            • <b>α nhỏ</b> (ví dụ 0 hoặc 0.1): vùng hao hụt rơi vào chỗ an toàn (mép khoảng mới, hoặc vùng giao). Khi
-            đó tỉ lệ mục tiêu ở chỗ dễ sai của bước mới tăng lên, nên <b>MC cao hơn</b> lý thuyết, từ +5% tới +50%.
-          </p>
-          <p>
-            • <b>α lớn</b> (ví dụ 0.2, σ = 1): vùng hao hụt trùng với chỗ dễ sai của bước mới, nên <b>MC thấp hơn</b>{' '}
-            lý thuyết, có bước thấp hơn tới 30%.
-          </p>
-          <p>
-            Hệ quả: Eq. (1) chỉ là xấp xỉ, <b>không phải cận trên cũng không phải cận dưới</b> của lỗi thật.
-          </p>
-        </Callout>
       </div>
     </Card>
   )

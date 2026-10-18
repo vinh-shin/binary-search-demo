@@ -1,5 +1,70 @@
 import katex from 'katex'
-import { useMemo } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+
+// ---------- Drawer lý thuyết: mỗi demo có một nút 📖 mở drawer bên phải ----------
+const DrawerCtx = createContext({ drawer: null, open: () => {}, close: () => {} })
+export const useDrawer = () => useContext(DrawerCtx)
+
+export function DrawerProvider({ children }) {
+  const [drawer, setDrawer] = useState(null) // { key, title, content }
+  // Bấm lại nút của drawer đang mở thì đóng
+  const open = (d) => setDrawer((cur) => (cur?.key === d.key ? null : d))
+  const close = () => setDrawer(null)
+  useEffect(() => {
+    const onKey = (e) => e.key === 'Escape' && setDrawer(null)
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+  return <DrawerCtx.Provider value={{ drawer, open, close }}>{children}</DrawerCtx.Provider>
+}
+
+export function TheoryDrawer() {
+  const { drawer, close } = useDrawer()
+  return (
+    <aside
+      aria-hidden={!drawer}
+      className={`fixed top-14 right-0 bottom-0 z-20 w-full lg:w-[44vw] lg:max-w-[640px] bg-white border-l border-slate-200 shadow-2xl
+        flex flex-col transition-transform duration-300 ${drawer ? 'translate-x-0' : 'translate-x-full'}`}
+    >
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-slate-200 bg-slate-50">
+        <div className="font-semibold text-slate-900">
+          <span className="mr-2">📖</span>
+          {drawer?.title}
+        </div>
+        <button onClick={close} className="w-8 h-8 rounded-md hover:bg-slate-200 text-slate-600" aria-label="Đóng">
+          ✕
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto px-5 py-4 text-slate-700 leading-relaxed">{drawer?.content}</div>
+    </aside>
+  )
+}
+
+function InfoButton({ info }) {
+  const { drawer, open } = useDrawer()
+  const active = drawer?.key === info.key
+  return (
+    <button
+      onClick={() => open(info)}
+      title="Xem lý thuyết, công thức và giải thích"
+      className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm border transition ${
+        active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+      }`}
+    >
+      📖 <span className="hidden sm:inline">Lý thuyết</span>
+    </button>
+  )
+}
+
+// Mục con trong drawer
+export function DSection({ title, children }) {
+  return (
+    <section className="mb-6">
+      <h4 className="font-bold text-slate-900 mb-2 text-base">{title}</h4>
+      <div className="space-y-2 text-sm">{children}</div>
+    </section>
+  )
+}
 
 export function TeX({ children, block = false, className = '' }) {
   const html = useMemo(
@@ -15,7 +80,7 @@ export function TeX({ children, block = false, className = '' }) {
 
 export function Section({ id, num, title, subtitle, children }) {
   return (
-    <section id={id} className="py-10">
+    <section id={id} className="py-10 scroll-mt-14">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
           <div className="text-indigo-600 font-mono text-sm font-semibold">{num}</div>
@@ -28,10 +93,16 @@ export function Section({ id, num, title, subtitle, children }) {
   )
 }
 
-export function Card({ title, children, className = '' }) {
+// info = { key, title, content }: hiện nút 📖 mở drawer lý thuyết của card
+export function Card({ title, children, className = '', info }) {
   return (
-    <div className={`bg-white rounded-xl border border-slate-200 shadow-sm p-5 ${className}`}>
-      {title && <h3 className="font-semibold text-slate-900 mb-3">{title}</h3>}
+    <div className={`@container bg-white rounded-xl border border-slate-200 shadow-sm p-5 ${className}`}>
+      {(title || info) && (
+        <div className="flex items-start justify-between gap-3 mb-3">
+          {title && <h3 className="font-semibold text-slate-900">{title}</h3>}
+          {info && <InfoButton info={info} />}
+        </div>
+      )}
       {children}
     </div>
   )

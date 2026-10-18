@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_PARAMS, Q, gridPoint, hVec, inRect, makeRng, runStep } from '../lib/model'
 import { Button, C, Card, Select, Slider, TeX, Toggle, fmtP } from '../components/ui'
+import { THEORY } from '../theory'
 
 // Giá trị cực nhỏ (ví dụ 1e-27) chỉ là nhiễu số học, không có ý nghĩa thực tế
 const fmtTiny = (x) => (x > 0 && x < 1e-9 ? '< 10⁻⁹' : fmtP(x))
@@ -338,7 +339,7 @@ export default function StepDemo() {
   const Viz = dimMode === '1d' ? Viz1D : Viz2D
 
   return (
-    <Card title="Demo 2 · Chạy Algorithm 1 từng bước">
+    <Card title="Demo 2 · Chạy Algorithm 1 từng bước" info={THEORY.demo2}>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <Toggle
           value={dimMode}
@@ -350,7 +351,7 @@ export default function StepDemo() {
         />
         <span className="text-xs text-slate-500">Bấm vào hình để đặt vị trí mục tiêu.</span>
       </div>
-      <div className="grid md:grid-cols-3 lg:grid-cols-6 gap-4 mb-5">
+      <div className="grid grid-cols-2 @2xl:grid-cols-3 @4xl:grid-cols-6 gap-4 mb-5">
         {dimMode === '1d' ? (
           <Slider label="Số điểm lưới n" value={n1} min={8} max={128} step={8} onChange={setN1} />
         ) : (
@@ -418,7 +419,7 @@ export default function StepDemo() {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_300px] gap-5">
+      <div className="grid @4xl:grid-cols-[1fr_300px] gap-5">
         <div className="bg-white border border-slate-200 rounded-lg p-2 flex justify-center">
           <Viz
             grid={grid}
@@ -458,11 +459,8 @@ export default function StepDemo() {
       <Legend />
       {dimMode === '2d' && (
         <p className="text-xs text-slate-500 mt-2">
-          <b>Cách đọc hình 2D:</b> ở pha Likelihood, chấm càng <b>đậm và to</b> thì ℓ(k) càng cao. Độ đậm là tỉ lệ
-          likelihood exp(ℓ(k) − max ℓ), tức xác suất hậu nghiệm tương đối khi prior đều. Ở pha Chọn vùng, vòng xanh và vòng cam đánh dấu điểm có ℓ lớn nhất trong H₁
-          và H₂. Hai cảm biến nằm trên cùng đường giữa của chiều còn lại, nên ℓ đối xứng qua đường đó và không phân biệt
-          được hai phía của nó. Điều này không ảnh hưởng tới quyết định của bước, vì H₁ và H₂ chỉ khác nhau theo{' '}
-          <b>chiều đang cắt</b>. Thuật toán cắt xen kẽ theo x và y.
+          Ở pha Likelihood, chấm càng đậm và to thì giả thuyết càng giống phép đo; vòng xanh và cam là điểm tốt nhất
+          của H₁ và H₂.
         </p>
       )}
 

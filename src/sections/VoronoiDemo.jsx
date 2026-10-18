@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_PARAMS, Q, f, makeRng, nextSize } from '../lib/model'
 import { C, Card, Select, Slider, TeX, fmtP } from '../components/ui'
+import { THEORY } from '../theory'
 
 const L = 500
 const SIZE = 440
@@ -119,8 +120,8 @@ export default function VoronoiDemo() {
   const foot = ((hs[k][0] + hs[k][1]) / 2)
 
   return (
-    <Card title="Demo 3 · Không gian đo, ô Voronoi và Theorem 1">
-      <div className="grid md:grid-cols-5 gap-4 mb-4">
+    <Card title="Demo 3 · Không gian đo, ô Voronoi và Theorem 1" info={THEORY.demo3}>
+      <div className="grid grid-cols-2 @3xl:grid-cols-5 gap-4 mb-4">
         <Slider label="Số giả thuyết n" value={n} min={6} max={40} step={2} onChange={setN} />
         <Slider label="α" value={alpha} min={0} max={0.24} step={0.01} onChange={setAlpha} format={(v) => v.toFixed(2)} />
         <Slider label="σ" value={sigma} min={0.02} max={0.6} step={0.01} onChange={setSigma} format={(v) => v.toFixed(2)} />
@@ -148,8 +149,8 @@ export default function VoronoiDemo() {
         )}
       </div>
 
-      <div className="grid lg:grid-cols-[460px_1fr] gap-6">
-        <div>
+      <div className="grid @4xl:grid-cols-[460px_1fr] gap-6">
+        <div className="w-full max-w-[460px] mx-auto">
           {/* trục số 1D */}
           <svg viewBox={`0 0 ${SIZE} 46`} className="w-full mb-1">
             <line x1="10" x2={SIZE - 10} y1="20" y2="20" stroke="#94a3b8" />
@@ -232,10 +233,8 @@ export default function VoronoiDemo() {
             </svg>
           </div>
           <div className="text-xs text-slate-500 mt-2">
-            Mỗi chấm to là một vector <TeX>{'h_k=(f(|s_1-k|), f(|s_2-k|))'}</TeX>. Bấm vào một chấm (hoặc một điểm trên
-            trục 1D) để chọn giả thuyết k. Đám mây nhỏ là 350 phép đo <TeX>{'z=h_k+\\eta'}</TeX>: chấm xanh là quyết định
-            đúng, chấm đỏ là lỗi. Màu nền là miền quyết định ML, vạch trắng là biên các ô Voronoi, đường đỏ đứt là{' '}
-            <TeX>{'z_1=z_2'}</TeX>.
+            Bấm vào một chấm (hoặc một điểm trên trục 1D) để chọn giả thuyết k. Chấm xanh trong đám mây là quyết định
+            đúng, chấm đỏ là lỗi.
           </div>
         </div>
 
@@ -259,9 +258,7 @@ export default function VoronoiDemo() {
           </div>
           {!symmetric && (
             <div className="text-sm bg-amber-50 border border-amber-200 rounded p-3 text-amber-900">
-              Khi đặt cảm biến lệch, biên quyết định không còn là đường chéo mà là một <b>đường gấp khúc</b> ghép từ
-              các cạnh Voronoi. Theorem 1 không còn đúng, chỉ còn Lemma 1 (tích phân Gauss trên hợp các ô Voronoi) và
-              phải ước lượng bằng số. Đây chính là hạn chế mà bài báo nêu: closed form chỉ có cho cấu hình đối xứng.
+              Cảm biến lệch: biên quyết định thành đường gấp khúc, Theorem 1 không còn áp dụng (chỉ có Monte Carlo).
             </div>
           )}
           <div className="max-h-64 overflow-auto border border-slate-200 rounded">

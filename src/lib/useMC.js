@@ -13,7 +13,7 @@ export function useMC() {
     const w = new Worker(new URL('./mc.worker.js', import.meta.url), { type: 'module' })
     workerRef.current = w
     const id = ++idRef.current
-    const total = cfg.kind === 'steps' ? 10 : cfg.alphas.length
+    const total = 10 // worker báo tiến độ theo 10 phần
     setState({ running: true, done: 0, total, results: null })
     w.onmessage = (e) => {
       if (e.data.id !== id) return

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { nextSize } from '../lib/model'
 import { C, Card, Slider } from '../components/ui'
+import { THEORY } from '../theory'
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
@@ -152,8 +153,8 @@ export default function TreeDemo() {
   const [target, setTarget] = useState(3)
   const t = Math.min(target, n - 1)
   return (
-    <Card title="Demo 1 · Cây phân hoạch: rời nhau vs chồng lấn (tái tạo Fig. 1)">
-      <div className="grid md:grid-cols-3 gap-4 mb-4">
+    <Card title="Demo 1 · Cây phân hoạch: rời nhau vs chồng lấn (tái tạo Fig. 1)" info={THEORY.demo1}>
+      <div className="grid @2xl:grid-cols-3 gap-4 mb-4">
         <Slider label="Số phần tử n" value={n} min={4} max={20} step={1} onChange={setN} />
         <Slider
           label="Độ chồng lấn α"
@@ -181,18 +182,13 @@ export default function TreeDemo() {
           </div>
         </div>
       </div>
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid @3xl:grid-cols-2 gap-6">
         <Dag n={n} alpha={0} target={t} title="(a) Binary search cổ điển (α = 0)" />
         <Dag n={n} alpha={alpha} target={t} title={`(b) Phân hoạch chồng lấn (α = ${alpha.toFixed(2)})`} />
       </div>
       <p className="text-sm text-slate-600 mt-4">
-        Đường <span className="text-emerald-700 font-semibold">xanh lá</span> là các nhánh vẫn giữ được mục tiêu. Với
-        α = 0 chỉ có <b>đúng một</b> đường đúng, nên mọi quyết định sai đều không sửa được. Khi có chồng lấn, các nút
-        ở mỗi mức dùng chung phần tử (ví dụ <span className="font-mono">ABC</span> và{' '}
-        <span className="font-mono">CDE</span> cùng chứa <span className="font-mono">C</span>). Vì vậy có{' '}
-        <b>nhiều</b> đường dẫn tới mục tiêu, và tại những bước mục tiêu nằm trong vùng giao thì chọn nhánh nào cũng
-        đúng. Cái giá phải trả là cây sâu hơn. Số đường được đếm trên cây đầy đủ (mọi đường từ gốc tới lá),
-        còn hình vẽ gộp các nút trùng nhau ở cùng mức lại.
+        Chọn mục tiêu và kéo α: đường <span className="text-emerald-700 font-semibold">xanh lá</span> là các nhánh còn giữ
+        được mục tiêu. So sánh số đường đúng và độ sâu giữa hai cây.
       </p>
     </Card>
   )

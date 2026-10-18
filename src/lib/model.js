@@ -54,11 +54,6 @@ export function sizeSequence(n0, alpha, nFinal = 1) {
   return seq
 }
 
-// Eq. (6): xấp xỉ độ sâu cây.
-export function approxDepth(n0, nFinal, alpha) {
-  return (Math.log(n0) - Math.log(nFinal)) / Math.log(1 / (0.5 + alpha))
-}
-
 // PRNG có seed (mulberry32) + Gaussian (Box–Muller) để mô phỏng tái lập được.
 export function makeRng(seed = 1) {
   let a = seed >>> 0
@@ -134,21 +129,6 @@ export function peStepContinuous(len, alpha, p, mode = 'exclusive', frac = 0.25,
     sum += Q(dk(x, s1, s2, p) / p.sigma)
   }
   return (2 / len) * sum * h
-}
-
-// Eq. (1): lỗi tổng theo lý thuyết, dùng P_e^t từ Corollary 2(a) ở mỗi bước.
-export function peTotalTheory(n0, L0, nFinal, alpha, p, mode = 'exclusive') {
-  const seq = sizeSequence(n0, alpha, nFinal)
-  const delta = L0 / n0
-  let surv = 1
-  const steps = []
-  for (let t = 0; t < seq.length - 1; t++) {
-    const n = seq[t]
-    const pe = peStepDiscrete(n, n * delta, alpha, p, mode)
-    surv *= 1 - pe
-    steps.push({ t: t + 1, n, pe })
-  }
-  return { beta: seq.length - 1, total: 1 - surv, steps, finalSize: seq[seq.length - 1] }
 }
 
 // ---------- Một bước của Algorithm 1 trên lưới 2D (1D là trường hợp ny = 1) ----------

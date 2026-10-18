@@ -274,7 +274,7 @@ export default function StepDemo() {
   const [n1, setN1] = useState(32)
   const [n2, setN2] = useState(16)
   const [alpha, setAlpha] = useState(0.15)
-  const [sigma, setSigma] = useState(0.4)
+  const [sigma, setSigma] = useState(1 / Math.SQRT2) // Bảng I
   const [mode, setMode] = useState('exclusive')
   const [seed, setSeed] = useState(7)
   const [stop1, setStop1] = useState(1)
@@ -369,8 +369,8 @@ export default function StepDemo() {
           value={mode}
           onChange={setMode}
           options={[
-            { value: 'exclusive', label: 'Giữa vùng riêng (Fig. 5)' },
-            { value: 'quarter', label: 'Cố định 1/4, 3/4 (Fig. 2)' },
+            { value: 'exclusive', label: 's = (L/2)(½ − α) (mục V, Fig. 5)' },
+            { value: 'quarter', label: 'L/4, 3L/4 (Bảng I, Fig. 2)' },
           ]}
         />
         <div className="text-sm">

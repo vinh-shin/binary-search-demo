@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react'
 import { DrawerProvider, Section, TheoryDrawer, useDrawer } from './components/ui'
 import TreeDemo from './sections/TreeDemo'
 import StepDemo from './sections/StepDemo'
-import StepMCDemo from './sections/StepMCDemo'
 import VoronoiDemo from './sections/VoronoiDemo'
 import RemarkChart from './sections/RemarkChart'
 import Review from './sections/Review'
+import PaperGuide from './guide/PaperGuide'
 
 const TABS = [
   { id: 'tong-quan', label: 'Tổng quan & Động lực', Comp: Overview },
@@ -13,6 +13,10 @@ const TABS = [
   { id: 'voronoi', label: 'Voronoi & Thm 1', Comp: VoronoiSection },
   { id: 'review', label: 'Đánh giá', Comp: Review },
 ]
+
+// Trang "Đọc hiểu bài báo" mở từ icon ở header, nằm ngoài dãy tab
+const GUIDE = 'doc-hieu'
+const isGuideHash = () => window.location.hash.slice(1) === GUIDE
 
 const tabFromHash = () => {
   const raw = window.location.hash.slice(1)
@@ -32,14 +36,19 @@ export default function App() {
 function Shell() {
   const [active, setActive] = useState(tabFromHash)
   // Tab đã mở thì giữ nguyên (chỉ ẩn đi) để demo không bị reset khi chuyển tab
-  const [visited, setVisited] = useState(() => new Set([tabFromHash()]))
+  const [visited, setVisited] = useState(() => new Set(isGuideHash() ? [] : [tabFromHash()]))
+  const [guide, setGuide] = useState(isGuideHash)
   const { drawer, close } = useDrawer()
 
   useEffect(() => {
     const onHash = () => {
-      const id = tabFromHash()
-      setActive(id)
-      setVisited((v) => new Set(v).add(id))
+      const g = isGuideHash()
+      setGuide(g)
+      if (!g) {
+        const id = tabFromHash()
+        setActive(id)
+        setVisited((v) => new Set(v).add(id))
+      }
       close()
       window.scrollTo({ top: 0 })
     }
@@ -55,53 +64,72 @@ function Shell() {
   return (
     <div className="min-h-screen flex flex-col">
       <nav className="sticky top-0 z-30 h-14 bg-white/90 backdrop-blur border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-4 h-full flex items-center gap-4 overflow-x-auto">
-          <a href="#tong-quan" className="font-bold text-indigo-700 whitespace-nowrap mr-2">
-            Overlap Binary Search
-          </a>
-          {TABS.map((t, i) => (
-            <a
-              key={t.id}
-              href={`#${t.id}`}
-              className={`text-sm whitespace-nowrap h-full flex items-center border-b-2 transition ${
-                t.id === active
-                  ? 'border-indigo-600 text-indigo-700 font-semibold'
-                  : 'border-transparent text-slate-600 hover:text-indigo-700'
-              }`}
-            >
-              <span className="font-mono text-xs text-slate-400 mr-1">{String(i + 1).padStart(2, '0')}</span>
-              {t.label}
+        <div className="max-w-6xl mx-auto px-4 h-full flex items-center gap-3">
+          <div className="flex-1 min-w-0 h-full flex items-center gap-4 overflow-x-auto">
+            <a href="#tong-quan" className="font-bold text-indigo-700 whitespace-nowrap mr-2">
+              Overlap Binary Search
             </a>
-          ))}
+            {TABS.map((t, i) => (
+              <a
+                key={t.id}
+                href={`#${t.id}`}
+                className={`text-sm whitespace-nowrap h-full flex items-center border-b-2 transition ${
+                  t.id === active && !guide
+                    ? 'border-indigo-600 text-indigo-700 font-semibold'
+                    : 'border-transparent text-slate-600 hover:text-indigo-700'
+                }`}
+              >
+                <span className="font-mono text-xs text-slate-400 mr-1">{String(i + 1).padStart(2, '0')}</span>
+                {t.label}
+              </a>
+            ))}
+          </div>
+          <a
+            href={guide ? `#${active}` : `#${GUIDE}`}
+            title={guide ? 'Quay lại các demo' : 'Đọc hiểu bài báo: diễn giải từng mục, công thức và ví dụ'}
+            className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm border transition ${
+              guide
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
+            }`}
+          >
+            <span aria-hidden>📄</span>
+            <span className="hidden md:inline whitespace-nowrap">Đọc hiểu bài báo</span>
+          </a>
         </div>
       </nav>
 
       {/* Khi drawer mở trên màn hình rộng, nội dung bị đẩy sang trái để không bị che */}
       <div
-        className={`flex-1 flex flex-col transition-[padding] duration-300 ${
-          drawer ? 'lg:pr-[min(44vw,640px)]' : ''
-        }`}
+        className={`flex-1 flex flex-col transition-[padding] duration-300 ${drawer ? 'lg:pr-[min(44vw,640px)]' : ''}`}
       >
         <main className="flex-1">
+          {guide && <PaperGuide />}
           {TABS.map(({ id, Comp }) =>
             visited.has(id) ? (
-              <div key={id} hidden={id !== active}>
+              <div key={id} hidden={guide || id !== active}>
                 <Comp />
               </div>
             ) : null,
           )}
         </main>
 
-        <div className="max-w-6xl mx-auto w-full px-4 py-8 flex justify-between gap-4">
+        <div className={`max-w-6xl mx-auto w-full px-4 py-8 flex justify-between gap-4 ${guide ? 'hidden' : ''}`}>
           {prev ? (
-            <a href={`#${prev.id}`} className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-sm">
+            <a
+              href={`#${prev.id}`}
+              className="px-4 py-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-100 text-sm"
+            >
               ← {prev.label}
             </a>
           ) : (
             <span />
           )}
           {next && (
-            <a href={`#${next.id}`} className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium">
+            <a
+              href={`#${next.id}`}
+              className="px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium"
+            >
               {next.label} →
             </a>
           )}
@@ -121,7 +149,8 @@ function Shell() {
 function DrawerHint() {
   return (
     <p className="text-sm text-slate-500 mt-2">
-      Bấm <span className="font-medium text-indigo-700">📖 Lý thuyết</span> ở góc mỗi demo để xem công thức và giải thích.
+      Bấm <span className="font-medium text-indigo-700">📖 Lý thuyết</span> ở góc mỗi demo để xem công thức và giải
+      thích.
     </p>
   )
 }
@@ -131,9 +160,8 @@ function Overview() {
   const demos = [
     ['Demo 1', 'Cây phân hoạch rời nhau và chồng lấn', '#dong-luc'],
     ['Demo 2', 'Chạy Algorithm 1 từng bước (1D/2D)', '#thuat-toan'],
-    ['Demo 2b', 'Monte Carlo: mục tiêu bị mất ở bước nào', '#thuat-toan'],
     ['Demo 3', 'Không gian đo, ô Voronoi và Theorem 1', '#voronoi'],
-    ['Demo 4', 'Remark 2: độ nhạy của lỗi theo α', '#voronoi'],
+    ['Demo 4', 'Corollary 2 và Remark 2: lỗi theo α', '#voronoi'],
   ]
   return (
     <>
@@ -144,11 +172,11 @@ function Overview() {
             Binary Search với phân hoạch chồng lấn
           </h1>
           <p className="mt-5 text-lg text-indigo-100 max-w-3xl leading-relaxed">
-            Khi mỗi quyết định "trái hay phải" có thể sai do nhiễu, binary search cổ điển mất mục tiêu ngay ở lần sai
-            đầu tiên. Bài báo cho hai nửa <b>chồng lên nhau</b> một phần (tham số α), đổi thêm vài bước lấy độ bền vững
-            trước nhiễu. Các demo dưới đây minh họa ý tưởng, thuật toán và phân tích lỗi.
+            Khi quyết định bị nhiễu, cách chia hai nửa rời nhau của binary search dễ bị lan truyền lỗi. Bài báo chia
+            thành hai nửa <b>chồng lấn</b> một phần (tham số α) để mục tiêu ít bị loại do nhiễu hơn, đổi lại cần thêm
+            bước tìm kiếm. Các demo dưới đây minh họa ý tưởng, thuật toán và phân tích lỗi của bài báo.
           </p>
-          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {demos.map(([name, desc, href]) => (
               <a
                 key={name}
@@ -172,7 +200,7 @@ function Overview() {
         id="dong-luc"
         num="01"
         title="Động lực: vì sao binary search dễ vỡ khi có nhiễu?"
-        subtitle="Demo 1 so sánh cây quyết định của binary search cổ điển và của phân hoạch chồng lấn: với chồng lấn, có nhiều nhánh vẫn giữ được mục tiêu dù chọn sai ở bước gần ranh giới."
+        subtitle="Demo 1 tái tạo Fig. 1 của bài báo: cây quyết định cho n = 8 phần tử với phân hoạch rời nhau (độ sâu 3) và phân hoạch chồng lấn (độ sâu 4)."
       >
         <DrawerHint />
         <div className="mt-6">
@@ -189,12 +217,11 @@ function ProblemAlgorithm() {
       id="thuat-toan"
       num="02"
       title="Bài toán và thuật toán"
-      subtitle="Demo 2 chạy Algorithm 1 từng bước trên bài toán định vị mục tiêu bằng cảm biến có nhiễu. Demo 2b chạy thuật toán hàng nghìn lần để xem mục tiêu bị mất ở bước nào và so với lý thuyết."
+      subtitle="Demo 2 chạy Algorithm 1 từng bước trên bài toán định vị vùng chứa mục tiêu bằng cảm biến có nhiễu, trong không gian một chiều hoặc hai chiều."
     >
       <DrawerHint />
       <div className="space-y-6 mt-6">
         <StepDemo />
-        <StepMCDemo />
       </div>
     </Section>
   )
@@ -206,7 +233,7 @@ function VoronoiSection() {
       id="voronoi"
       num="03"
       title="Hình học của lỗi: ô Voronoi và Theorem 1"
-      subtitle="Demo 3 hiển thị không gian phép đo, nơi quyết định của thuật toán chính là các ô Voronoi và xác suất lỗi có công thức đóng. Demo 4 cho thấy lỗi thay đổi thế nào khi tăng độ chồng lấn α."
+      subtitle="Demo 3 minh họa Lemma 1 và Theorem 1 trong không gian phép đo: quyết định ML ứng với các ô Voronoi, và với hai cảm biến đối xứng thì xác suất lỗi có công thức đóng. Demo 4 vẽ Corollary 2 và Remark 2."
     >
       <DrawerHint />
       <div className="space-y-6 mt-6">

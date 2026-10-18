@@ -57,18 +57,6 @@ function Dag({ n, alpha, target, title }) {
   }
   const contains = (nd) => target >= nd.a && target < nd.b
   // số đường đi từ gốc tới lá mà vẫn giữ được mục tiêu
-  const [goodPaths, totalPaths] = useMemo(() => {
-    const count = (filter) => {
-      const ways = levels.map((lv) => lv.map(() => 0))
-      ways[0][0] = filter(levels[0][0]) ? 1 : 0
-      edges.forEach((e) => {
-        if (filter(levels[e.level + 1][e.to])) ways[e.level + 1][e.to] += ways[e.level][e.from]
-      })
-      return ways[levels.length - 1].reduce((s, v) => s + v, 0)
-    }
-    return [count(contains), count(() => true)]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [levels, edges, target])
   const safeSteps = useMemo(() => {
     // dọc theo một đường bất kỳ chứa mục tiêu: bao nhiêu bước mục tiêu nằm trong vùng giao?
     let cnt = 0
@@ -135,10 +123,7 @@ function Dag({ n, alpha, target, title }) {
           }),
         )}
       </svg>
-      <div className="text-xs text-slate-600 mt-2 grid grid-cols-2 gap-1">
-        <div>
-          Nhánh giữ mục tiêu <b className="text-emerald-700">{LETTERS[target]}</b>: <b>{goodPaths}</b> / {totalPaths} đường
-        </div>
+      <div className="text-xs text-slate-600 mt-2">
         <div>
           Bước "an toàn" (mục tiêu ở vùng giao, <i>P</i><sub>e</sub><sup>t</sup>=0): <b>{safeSteps}</b> / {levels.length - 1}
         </div>
@@ -149,7 +134,7 @@ function Dag({ n, alpha, target, title }) {
 
 export default function TreeDemo() {
   const [n, setN] = useState(8)
-  const [alpha, setAlpha] = useState(0.2)
+  const [alpha, setAlpha] = useState(0.1)
   const [target, setTarget] = useState(3)
   const t = Math.min(target, n - 1)
   return (
@@ -172,7 +157,7 @@ export default function TreeDemo() {
               <button
                 key={i}
                 onClick={() => setTarget(i)}
-                className={`w-6 h-6 rounded text-xs font-mono ${
+                className={`cursor-pointer w-6 h-6 rounded text-xs font-mono ${
                   i === t ? 'bg-emerald-600 text-white' : 'bg-slate-100 hover:bg-slate-200'
                 }`}
               >
@@ -187,8 +172,8 @@ export default function TreeDemo() {
         <Dag n={n} alpha={alpha} target={t} title={`(b) Phân hoạch chồng lấn (α = ${alpha.toFixed(2)})`} />
       </div>
       <p className="text-sm text-slate-600 mt-4">
-        Chọn mục tiêu và kéo α: đường <span className="text-emerald-700 font-semibold">xanh lá</span> là các nhánh còn giữ
-        được mục tiêu. So sánh số đường đúng và độ sâu giữa hai cây.
+        Mặc định n = 8, α = 0,1 cho đúng hai cây của Fig. 1. Chọn mục tiêu để tô xanh các nút chứa nó; kéo n và α để
+        xem cây và độ sâu thay đổi theo quy tắc (3).
       </p>
     </Card>
   )

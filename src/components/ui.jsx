@@ -31,7 +31,7 @@ export function TheoryDrawer() {
           <span className="mr-2">📖</span>
           {drawer?.title}
         </div>
-        <button onClick={close} className="w-8 h-8 rounded-md hover:bg-slate-200 text-slate-600" aria-label="Đóng">
+        <button onClick={close} className="cursor-pointer w-8 h-8 rounded-md hover:bg-slate-200 text-slate-600" aria-label="Đóng">
           ✕
         </button>
       </div>
@@ -47,7 +47,7 @@ function InfoButton({ info }) {
     <button
       onClick={() => open(info)}
       title="Xem lý thuyết, công thức và giải thích"
-      className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm border transition ${
+      className={`cursor-pointer shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm border transition ${
         active ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
       }`}
     >
@@ -175,7 +175,7 @@ export function Toggle({ options, value, onChange }) {
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`px-3 py-1.5 ${value === o.value ? 'bg-indigo-600 text-white' : 'bg-white hover:bg-slate-100'}`}
+          className={`cursor-pointer px-3 py-1.5 ${value === o.value ? 'bg-indigo-600 text-white' : 'bg-white hover:bg-slate-100'}`}
         >
           {o.label}
         </button>
@@ -194,7 +194,7 @@ export function Button({ children, onClick, variant = 'primary', disabled }) {
     <button
       disabled={disabled}
       onClick={onClick}
-      className={`px-3 py-1.5 rounded-md text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
+      className={`cursor-pointer px-3 py-1.5 rounded-md text-sm font-medium transition disabled:opacity-40 disabled:cursor-not-allowed ${cls}`}
     >
       {children}
     </button>

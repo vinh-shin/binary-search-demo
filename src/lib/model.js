@@ -41,19 +41,6 @@ export function nextSize(n, alpha) {
   return Math.max(roundHalfEven((0.5 + alpha) * n), Math.ceil(n / 2))
 }
 
-// Dãy kích thước n^(0) > n^(1) > ... cho tới khi n <= nFinal.
-export function sizeSequence(n0, alpha, nFinal = 1) {
-  const seq = [n0]
-  let n = n0
-  while (n > nFinal) {
-    const m = nextSize(n, alpha)
-    if (m >= n) break
-    n = m
-    seq.push(n)
-  }
-  return seq
-}
-
 // PRNG có seed (mulberry32) + Gaussian (Box–Muller) để mô phỏng tái lập được.
 export function makeRng(seed = 1) {
   let a = seed >>> 0
@@ -87,9 +74,9 @@ export function makeRng(seed = 1) {
 //  - 'exclusive': giữa vùng "riêng" của mỗi nửa, s = (L/2)(1/2 - alpha)  (Fig. 3, 5)
 //  - 'quarter'  : cố định tại L/4 và 3L/4                                 (Fig. 2)
 //  - 'custom'   : s = frac * L
-export function sensorPositions(start, len, mode, alphaEff, frac = 0.25) {
+export function sensorPositions(start, len, mode, alpha, frac = 0.25) {
   let off
-  if (mode === 'exclusive') off = (len / 2) * (0.5 - alphaEff)
+  if (mode === 'exclusive') off = (len / 2) * (0.5 - alpha)
   else if (mode === 'quarter') off = len / 4
   else off = frac * len
   return [start + off, start + len - off]
@@ -99,22 +86,6 @@ export function sensorPositions(start, len, mode, alphaEff, frac = 0.25) {
 // đối xứng: d_k = ||h_k - h_k'|| / 2 = |h_k1 - h_k2| / sqrt(2).
 export function dk(x, s1, s2, p) {
   return Math.abs(f(Math.abs(s1 - x), p) - f(Math.abs(s2 - x), p)) / Math.SQRT2
-}
-
-// Corollary 2(a): P_e^t trên lưới rời rạc n điểm, khoảng dài len (bắt đầu tại 0).
-export function peStepDiscrete(n, len, alpha, p, mode = 'exclusive', frac = 0.25) {
-  const m = nextSize(n, alpha)
-  const excl = n - m // số điểm thuộc H1 \ H2
-  if (excl <= 0) return 0
-  const delta = len / n
-  const alphaEff = m / n - 0.5
-  const [s1, s2] = sensorPositions(0, len, mode, alphaEff, frac)
-  let sum = 0
-  for (let k = 0; k < excl; k++) {
-    const x = (k + 0.5) * delta
-    sum += Q(dk(x, s1, s2, p) / p.sigma)
-  }
-  return (2 / n) * sum
 }
 
 // Corollary 2(b): giới hạn liên tục n -> infinity (tích phân Riemann).
@@ -163,8 +134,8 @@ export function partition(state, grid, alpha) {
   return { dim, n, m, H1, H2, alphaEff: m / n - 0.5 }
 }
 
-// Cảm biến đối xứng quanh điểm giữa theo chiều cắt; chiều còn lại đặt ở tâm.
-export function sensors2D(state, grid, part, mode) {
+// Cảm biến đối xứng quanh điểm giữa theo chiều cắt (Phụ lục B); tọa độ chiều còn lại đặt ở tâm (giả định G3).
+export function sensors2D(state, grid, part, mode, alpha) {
   const dX = grid.Lx / grid.nx
   const dY = grid.Ly / grid.ny
   const cx = ((state.x0 + state.x1) / 2) * dX
@@ -172,7 +143,7 @@ export function sensors2D(state, grid, part, mode) {
   if (part.dim === 'x') {
     const start = state.x0 * dX
     const len = (state.x1 - state.x0) * dX
-    const off = mode === 'exclusive' ? ((part.n - part.m) * dX) / 2 : len / 4
+    const off = mode === 'exclusive' ? (len / 2) * (0.5 - alpha) : len / 4
     return [
       [start + off, cy],
       [start + len - off, cy],
@@ -180,7 +151,7 @@ export function sensors2D(state, grid, part, mode) {
   }
   const start = state.y0 * dY
   const len = (state.y1 - state.y0) * dY
-  const off = mode === 'exclusive' ? ((part.n - part.m) * dY) / 2 : len / 4
+  const off = mode === 'exclusive' ? (len / 2) * (0.5 - alpha) : len / 4
   return [
     [cx, start + off],
     [cx, start + len - off],
@@ -196,18 +167,13 @@ export function hVec(point, sensors, p) {
 export const inRect = (i, j, r) => i >= r.x0 && i < r.x1 && j >= r.y0 && j < r.y1
 
 // Thực hiện một bước: đo, tính log-likelihood mọi điểm, chọn nửa theo Eq. (5).
-export function runStep(state, grid, alpha, p, mode, target, rng, reps = 1) {
+export function runStep(state, grid, alpha, p, mode, target, rng) {
   const part = partition(state, grid, alpha)
   if (!part) return null
-  const sens = sensors2D(state, grid, part, mode)
+  const sens = sensors2D(state, grid, part, mode, alpha)
   const tPos = gridPoint(target[0], target[1], grid)
   const hT = hVec(tPos, sens, p)
-  // r lần lặp → lấy trung bình (thống kê đủ cho ML Gauss)
-  const z = hT.map((h) => {
-    let acc = 0
-    for (let r = 0; r < reps; r++) acc += h + p.sigma * rng.normal()
-    return acc / reps
-  })
+  const z = hT.map((h) => h + p.sigma * rng.normal())
   const lik = []
   let best1 = -Infinity
   let best2 = -Infinity
@@ -216,7 +182,7 @@ export function runStep(state, grid, alpha, p, mode, target, rng, reps = 1) {
   for (let i = state.x0; i < state.x1; i++) {
     for (let j = state.y0; j < state.y1; j++) {
       const h = hVec(gridPoint(i, j, grid), sens, p)
-      const ll = (-reps * ((z[0] - h[0]) ** 2 + (z[1] - h[1]) ** 2)) / (2 * p.sigma ** 2)
+      const ll = -((z[0] - h[0]) ** 2 + (z[1] - h[1]) ** 2) / (2 * p.sigma ** 2)
       lik.push({ i, j, ll, h })
       if (inRect(i, j, part.H1) && ll > best1) {
         best1 = ll
@@ -244,48 +210,4 @@ export function runStep(state, grid, alpha, p, mode, target, rng, reps = 1) {
     next,
     targetInside: inRect(target[0], target[1], next),
   }
-}
-
-// ---------- Mô phỏng Monte Carlo 1D cho các phương pháp (dùng trong worker) ----------
-
-function precomputeH(n0, L0, p) {
-  const delta = L0 / n0
-  return Float64Array.from({ length: n0 }, (_, i) => (i + 0.5) * delta)
-}
-
-// Chạy trọn Algorithm 1 (1D) cho một mục tiêu, trả về mục tiêu có bị loại hay không.
-export function simOverlap1D({ n0, L0, nFinal, alpha, p, mode, rng, target }) {
-  const xs = precomputeH(n0, L0, p)
-  const delta = L0 / n0
-  let lo = 0
-  let hi = n0
-  let t = 0
-  let failStep = -1 // bước (0-index) mà mục tiêu bị loại, -1 nếu không bị loại
-  while (hi - lo > nFinal) {
-    const n = hi - lo
-    const m = nextSize(n, alpha)
-    if (m >= n) break
-    const start = lo * delta
-    const off = mode === 'quarter' ? (n * delta) / 4 : ((n - m) * delta) / 2
-    const s1 = start + off
-    const s2 = start + n * delta - off
-    const xt = xs[target]
-    const sig = p.sigma
-    const z1 = f(Math.abs(s1 - xt), p) + sig * rng.normal()
-    const z2 = f(Math.abs(s2 - xt), p) + sig * rng.normal()
-    let b1 = -Infinity
-    let b2 = -Infinity
-    for (let k = lo; k < hi; k++) {
-      const a = z1 - f(Math.abs(s1 - xs[k]), p)
-      const b = z2 - f(Math.abs(s2 - xs[k]), p)
-      const ll = -(a * a + b * b) / (2 * sig * sig)
-      if (k < lo + m && ll > b1) b1 = ll
-      if (k >= hi - m && ll > b2) b2 = ll
-    }
-    if (b1 > b2 || (b1 === b2 && z1 >= z2)) hi = lo + m
-    else lo = hi - m
-    if (failStep < 0 && (target < lo || target >= hi)) failStep = t
-    t++
-  }
-  return { error: target < lo || target >= hi, steps: t, finalSize: hi - lo, failStep }
 }

@@ -93,8 +93,13 @@ export function Section({ id, num, title, subtitle, children }) {
   )
 }
 
+// Trang trình chiếu bọc các demo trong context này để ẩn nút 📖 Lý thuyết
+export const HideTheoryCtx = createContext(false)
+
 // info = { key, title, content }: hiện nút 📖 mở drawer lý thuyết của card
 export function Card({ title, children, className = '', info }) {
+  const hideTheory = useContext(HideTheoryCtx)
+  if (hideTheory) info = null
   return (
     <div className={`@container bg-white rounded-xl border border-slate-200 shadow-sm p-5 ${className}`}>
       {(title || info) && (

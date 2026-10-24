@@ -285,7 +285,7 @@ export function MeasureSpace({ alpha = 0.1, showZ = true, showCells = true, show
         <g>
           <line x1={X(H[TARGET][0])} y1={Y(H[TARGET][1])} x2={X(Z[0])} y2={Y(Z[1])} stroke={C.target} strokeDasharray="2 2" />
           <path d={`M${X(Z[0])} ${Y(Z[1]) - 7} l2 5 5 0 -4 3 2 6 -5 -4 -5 4 2 -6 -4 -3 5 0 z`} fill={C.target} />
-          <text x={X(Z[0]) - 8} y={Y(Z[1]) - 8} textAnchor="end" className="text-[11px] font-semibold" fill={C.target}>
+          <text x={X(Z[0]) + 8} y={Y(Z[1]) - 6} textAnchor="start" className="text-[11px] font-semibold" fill={C.target}>
             z
           </text>
         </g>

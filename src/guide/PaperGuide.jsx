@@ -567,7 +567,7 @@ function Sec4A() {
         Để tính <T>{'P_e^t'}</T>, bài báo chuyển góc nhìn: thay vì nhìn bản đồ vị trí, hãy nhìn <b>không gian phép đo</b>.
         Với 2 cảm biến, mỗi phép đo là một điểm <T>{'(z_1, z_2)'}</T> trên mặt phẳng; mỗi ứng viên k ứng với một điểm{' '}
         <T>{'\\boldsymbol h_k'}</T>. Quy tắc ML "chọn <T>{'\\boldsymbol h_k'}</T> gần z nhất" chia mặt phẳng thành các vùng,
-        mỗi vùng gồm các điểm gần <T>{'\\boldsymbol h_k'}</T> hơn mọi <T>{'\\boldsymbol h_{k\'}'}</T> khác. Đó là{' '}
+        mỗi vùng gồm các điểm gần <T>{'\\boldsymbol h_k'}</T> hơn mọi <T>{'\\boldsymbol h_j'}</T> khác (j ≠ k). Đó là{' '}
         <b>ô Voronoi</b>.
       </p>
       <Eq
@@ -575,6 +575,12 @@ function Sec4A() {
           'V_k^t = \\Big\\{\\boldsymbol x\\in\\mathbb R^{|S^t|} \\ \\Big|\\ \\lVert \\boldsymbol x - \\boldsymbol h_k^t\\rVert_2 \\le \\lVert \\boldsymbol x - \\boldsymbol h_{k\'}^t\\rVert_2,\\ \\forall k\'\\neq k\\in\\mathcal H^{t-1}\\Big\\}'
         }
       />
+      <Callout type="warn" title="Lưu ý ký hiệu k′">
+        Trong định nghĩa này, k′ là <b>bất kỳ</b> ứng viên nào khác k (cả 7 điểm còn lại trong ví dụ n = 8). Ở Theorem 1
+        và Phụ lục B, bài báo dùng lại ký hiệu k′ với nghĩa khác: <b>đúng một</b> điểm, là bạn đối xứng của k (ví dụ k = 4
+        thì k′ = 5). Ngoài ra <T>{"\\boldsymbol h_{k'}"}</T> là cùng hàm h tính tại vị trí k′, không phải một đại lượng
+        "h phẩy" khác tại vị trí k.
+      </Callout>
       <p>
         <b>Lemma 1.</b> Nếu mục tiêu không ở vùng chồng lấn và nằm trong nửa <T>{'\\mathcal H_m^t'}</T> (nửa đúng), thì
       </p>
@@ -589,8 +595,15 @@ function Sec4A() {
           <MeasureSpace alpha={0.1} />
           <div className="space-y-2">
             <p>
-              Tám điểm <T>{'\\boldsymbol h_1,\\dots,\\boldsymbol h_8'}</T> và ô Voronoi của chúng (α = 0,1). Màu: xanh là chỉ
-              thuộc H₁ = {'{1,2,3}'} phần riêng, tím là phần chung {'{4,5}'}, cam là chỉ thuộc H₂.
+              Tám điểm <T>{'\\boldsymbol h_1,\\dots,\\boldsymbol h_8'}</T> và ô Voronoi của chúng (α = 0,1, H₁ ={' '}
+              {'{1,…,5}'}, H₂ = {'{4,…,8}'}). Màu: xanh là phần chỉ thuộc H₁ {'{1,2,3}'}, tím là phần chung {'{4,5}'}, cam
+              là phần chỉ thuộc H₂ {'{6,7,8}'}.
+            </p>
+            <p>
+              Các cặp đối xứng (1,8), (2,7), (3,6), (4,5) là ảnh gương của nhau qua đường chéo: hai thành phần của{' '}
+              <T>{'\\boldsymbol h_k'}</T> chỉ đổi chỗ, ví dụ{' '}
+              <T>{`\\boldsymbol h_3 = (${tx(EX.H[2][0])},\\ ${tx(EX.H[2][1])})`}</T> và{' '}
+              <T>{`\\boldsymbol h_6 = (${tx(EX.H[5][0])},\\ ${tx(EX.H[5][1])})`}</T>.
             </p>
             <p>
               Giả sử mục tiêu ở điểm 2 (chỉ thuộc H₁). Theo Lemma 1, lỗi khi z rơi vào ô của 6, 7 hoặc 8 (ô cam). Vì{' '}
@@ -626,7 +639,8 @@ function Sec4B() {
     <Sec id="gd-4b" kicker="Mục IV-B" title="Theorem 1: công thức đóng khi hai cảm biến đối xứng">
       <p>
         Đặt đúng <b>hai cảm biến đối xứng</b> nhau qua điểm giữa của chiều cắt. Khi đó mỗi ứng viên k có một "bạn đối xứng"
-        k′ ở nửa bên kia, và cảm biến 1 nhìn k giống hệt cảm biến 2 nhìn k′:
+        k′ ở nửa bên kia (từ đây k′ chỉ điểm đối xứng này, không còn là "mọi điểm khác" như ở Lemma 1), và cảm biến 1
+        nhìn k giống hệt cảm biến 2 nhìn k′:
       </p>
       <Eq tex={"h_{k,1} = h_{k',2},\\qquad h_{k,2} = h_{k',1}"} />
       <p>
@@ -796,7 +810,7 @@ function Sec4C() {
         </p>
       </Example>
       <p>
-        <DemoLink href="#voronoi">Demo 4: Pₑᵗ theo α</DemoLink>
+        <DemoLink href="#voronoi">Demo 3: ô Voronoi và Theorem 1</DemoLink>
       </p>
     </Sec>
   )
@@ -866,12 +880,9 @@ function Sec5() {
         <p>
           Khi α tăng, phần riêng co lại về phía mép, và cảm biến "đi theo" phần riêng đó nên vẫn phân biệt tốt các điểm còn
           phải phân biệt. Tại α = 0,2, lỗi chỉ còn khoảng một nửa so với cảm biến cố định. (Ví dụ dùng σ = 1/√2 của Bảng I;
-          bài báo không ghi σ của Fig. 5, xem giả định G7 trong drawer của Demo 4.)
+          bài báo không ghi σ của Fig. 5.)
         </p>
       </Example>
-      <p className="flex flex-wrap gap-2">
-        <DemoLink href="#voronoi">Demo 4: so sánh hai cách đặt cảm biến</DemoLink>
-      </p>
     </Sec>
   )
 }

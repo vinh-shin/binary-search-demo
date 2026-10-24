@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_PARAMS, Q, f, makeRng, nextSize } from '../lib/model'
-import { C, Card, Select, Slider, TeX, fmtP } from '../components/ui'
+import { C, Card, Slider, TeX, fmtP } from '../components/ui'
 import { THEORY } from '../theory'
 
 const L = 500
 const SIZE = 440
+// Hai cảm biến cố định tại L/4 và 3L/4, như ví dụ trong báo cáo
+const SENSORS = [L / 4, (3 * L) / 4]
 
 export default function VoronoiDemo() {
   const [n, setN] = useState(16)
   const [alpha, setAlpha] = useState(0.15)
   const [sigma, setSigma] = useState(1 / Math.SQRT2) // Bảng I
-  const [mode, setMode] = useState('exclusive')
   const [sel, setSel] = useState(2)
   const canvasRef = useRef(null)
   const p = useMemo(() => ({ ...DEFAULT_PARAMS, sigma }), [sigma])
@@ -18,14 +19,7 @@ export default function VoronoiDemo() {
   const m = nextSize(n, alpha)
   const delta = L / n
   const xs = useMemo(() => Array.from({ length: n }, (_, i) => (i + 0.5) * delta), [n, delta])
-  const sensors = useMemo(() => {
-    // mục V: s = (L/2)(1/2 − α); Bảng I (liên tục): L/4 và 3L/4
-    if (mode === 'exclusive') {
-      const off = (L / 2) * (0.5 - alpha)
-      return [off, L - off]
-    }
-    return [L / 4, (3 * L) / 4]
-  }, [mode, alpha])
+  const sensors = SENSORS
 
   const group = (k) => (k < n - m ? 1 : k >= m ? 2 : 0) // 0 = vùng giao
   const hs = useMemo(
@@ -108,15 +102,6 @@ export default function VoronoiDemo() {
         <Slider label="Số giả thuyết n" value={n} min={6} max={40} step={2} onChange={setN} />
         <Slider label="α" value={alpha} min={0} max={0.24} step={0.01} onChange={setAlpha} format={(v) => v.toFixed(2)} />
         <Slider label="σ" value={sigma} min={0.05} max={1.5} step={0.01} onChange={setSigma} format={(v) => v.toFixed(3)} />
-        <Select
-          label="Đặt cảm biến"
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'exclusive', label: 's = (L/2)(½ − α) (mục V)' },
-            { value: 'quarter', label: 'L/4 và 3L/4 (Bảng I)' },
-          ]}
-        />
           <div className="text-xs text-slate-500">
             s₁ = {sensors[0].toFixed(1)}, s₂ = {sensors[1].toFixed(1)}
             <br />

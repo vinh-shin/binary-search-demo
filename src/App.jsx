@@ -3,9 +3,9 @@ import { DrawerProvider, Section, TheoryDrawer, useDrawer } from './components/u
 import TreeDemo from './sections/TreeDemo'
 import StepDemo from './sections/StepDemo'
 import VoronoiDemo from './sections/VoronoiDemo'
-import RemarkChart from './sections/RemarkChart'
 import Review from './sections/Review'
 import PaperGuide from './guide/PaperGuide'
+import Presentation from './present/Presentation'
 
 const TABS = [
   { id: 'tong-quan', label: 'Tổng quan & Động lực', Comp: Overview },
@@ -17,6 +17,10 @@ const TABS = [
 // Trang "Đọc hiểu bài báo" mở từ icon ở header, nằm ngoài dãy tab
 const GUIDE = 'doc-hieu'
 const isGuideHash = () => window.location.hash.slice(1) === GUIDE
+
+// Trang trình chiếu: chỉ các demo, chuyển slide bằng Back/Next, mở từ icon ▶ ở header
+const PRESENT = 'trinh-chieu'
+const isPresentHash = () => window.location.hash.slice(1) === PRESENT
 
 const tabFromHash = () => {
   const raw = window.location.hash.slice(1)
@@ -36,15 +40,18 @@ export default function App() {
 function Shell() {
   const [active, setActive] = useState(tabFromHash)
   // Tab đã mở thì giữ nguyên (chỉ ẩn đi) để demo không bị reset khi chuyển tab
-  const [visited, setVisited] = useState(() => new Set(isGuideHash() ? [] : [tabFromHash()]))
+  const [visited, setVisited] = useState(() => new Set(isGuideHash() || isPresentHash() ? [] : [tabFromHash()]))
   const [guide, setGuide] = useState(isGuideHash)
+  const [present, setPresent] = useState(isPresentHash)
   const { drawer, close } = useDrawer()
 
   useEffect(() => {
     const onHash = () => {
       const g = isGuideHash()
+      const pr = isPresentHash()
       setGuide(g)
-      if (!g) {
+      setPresent(pr)
+      if (!g && !pr) {
         const id = tabFromHash()
         setActive(id)
         setVisited((v) => new Set(v).add(id))
@@ -60,6 +67,8 @@ function Shell() {
   const idx = TABS.findIndex((t) => t.id === active)
   const prev = TABS[idx - 1]
   const next = TABS[idx + 1]
+
+  if (present) return <Presentation exitHref={`#${active}`} />
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -85,16 +94,24 @@ function Shell() {
             ))}
           </div>
           <a
+            href={`#${PRESENT}`}
+            title="Trình chiếu các demo"
+            aria-label="Trình chiếu các demo"
+            className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md text-base border transition bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+          >
+            <span aria-hidden>▶</span>
+          </a>
+          <a
             href={guide ? `#${active}` : `#${GUIDE}`}
             title={guide ? 'Quay lại các demo' : 'Đọc hiểu bài báo: diễn giải từng mục, công thức và ví dụ'}
-            className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm border transition ${
+            aria-label={guide ? 'Quay lại các demo' : 'Đọc hiểu bài báo'}
+            className={`shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-md text-lg border transition ${
               guide
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
             }`}
           >
             <span aria-hidden>📄</span>
-            <span className="hidden md:inline whitespace-nowrap">Đọc hiểu bài báo</span>
           </a>
         </div>
       </nav>
@@ -161,7 +178,6 @@ function Overview() {
     ['Demo 1', 'Cây phân hoạch rời nhau và chồng lấn', '#dong-luc'],
     ['Demo 2', 'Chạy Algorithm 1 từng bước (1D/2D)', '#thuat-toan'],
     ['Demo 3', 'Không gian đo, ô Voronoi và Theorem 1', '#voronoi'],
-    ['Demo 4', 'Corollary 2 và Remark 2: lỗi theo α', '#voronoi'],
   ]
   return (
     <>
@@ -176,7 +192,7 @@ function Overview() {
             thành hai nửa <b>chồng lấn</b> một phần (tham số α) để mục tiêu ít bị loại do nhiễu hơn, đổi lại cần thêm
             bước tìm kiếm. Các demo dưới đây minh họa ý tưởng, thuật toán và phân tích lỗi của bài báo.
           </p>
-          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="mt-8 grid sm:grid-cols-3 gap-3">
             {demos.map(([name, desc, href]) => (
               <a
                 key={name}
@@ -233,12 +249,11 @@ function VoronoiSection() {
       id="voronoi"
       num="03"
       title="Hình học của lỗi: ô Voronoi và Theorem 1"
-      subtitle="Demo 3 minh họa Lemma 1 và Theorem 1 trong không gian phép đo: quyết định ML ứng với các ô Voronoi, và với hai cảm biến đối xứng thì xác suất lỗi có công thức đóng. Demo 4 vẽ Corollary 2 và Remark 2."
+      subtitle="Demo 3 minh họa Lemma 1 và Theorem 1 trong không gian phép đo: quyết định ML ứng với các ô Voronoi, và với hai cảm biến đối xứng thì xác suất lỗi có công thức đóng."
     >
       <DrawerHint />
       <div className="space-y-6 mt-6">
         <VoronoiDemo />
-        <RemarkChart />
       </div>
     </Section>
   )

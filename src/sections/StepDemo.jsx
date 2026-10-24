@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DEFAULT_PARAMS, Q, gridPoint, hVec, inRect, makeRng, runStep } from '../lib/model'
-import { Button, C, Card, Select, Slider, TeX, Toggle, fmtP } from '../components/ui'
+import { Button, C, Card, Slider, TeX, Toggle, fmtP } from '../components/ui'
 import { THEORY } from '../theory'
+
+// Hai cảm biến cố định tại L/4 và 3L/4 của vùng hiện tại, như ví dụ trong báo cáo
+const SENSOR_MODE = 'quarter'
 
 // Giá trị cực nhỏ (ví dụ 1e-27) chỉ là nhiễu số học, không có ý nghĩa thực tế
 const fmtTiny = (x) => (x > 0 && x < 1e-9 ? '< 10⁻⁹' : fmtP(x))
@@ -275,10 +278,7 @@ export default function StepDemo() {
   const [n2, setN2] = useState(16)
   const [alpha, setAlpha] = useState(0.15)
   const [sigma, setSigma] = useState(1 / Math.SQRT2) // Bảng I
-  const [mode, setMode] = useState('exclusive')
   const [seed, setSeed] = useState(7)
-  const [stop1, setStop1] = useState(1)
-  const [stop2, setStop2] = useState(4)
   // Mục tiêu riêng cho từng chế độ (điểm 1D [11, 0] nằm sát mép dưới khi sang 2D)
   const [targets, setTargets] = useState({ '1d': [11, 0], '2d': [12, 6] })
   const target = targets[dimMode]
@@ -292,11 +292,10 @@ export default function StepDemo() {
   )
   const tgt = [Math.min(target[0], grid.nx - 1), Math.min(target[1], grid.ny - 1)]
   const p = useMemo(() => ({ ...DEFAULT_PARAMS, sigma }), [sigma])
-  const stopSize = dimMode === '1d' ? stop1 : stop2
   const sim = useMemo(
-    () => simulate({ grid, alpha, p, mode, target: tgt, seed, stopSize }),
+    () => simulate({ grid, alpha, p, mode: SENSOR_MODE, target: tgt, seed, stopSize: 1 }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [grid, alpha, p, mode, tgt[0], tgt[1], seed, stopSize],
+    [grid, alpha, p, tgt[0], tgt[1], seed],
   )
 
   useEffect(() => setCursor({ step: 0, phase: -1 }), [sim])
@@ -359,20 +358,6 @@ export default function StepDemo() {
         )}
         <Slider label="Độ chồng lấn α" value={alpha} min={0} max={0.24} step={0.01} onChange={setAlpha} format={(v) => v.toFixed(2)} />
         <Slider label="Nhiễu σ" value={sigma} min={0.02} max={1.5} step={0.02} onChange={setSigma} format={(v) => v.toFixed(2)} />
-        {dimMode === '1d' ? (
-          <Slider label="Dừng khi |H| ≤" value={stop1} min={1} max={16} step={1} onChange={setStop1} />
-        ) : (
-          <Slider label="Dừng khi |H| ≤" value={stop2} min={1} max={64} step={1} onChange={setStop2} />
-        )}
-        <Select
-          label="Vị trí cảm biến"
-          value={mode}
-          onChange={setMode}
-          options={[
-            { value: 'exclusive', label: 's = (L/2)(½ − α) (mục V, Fig. 5)' },
-            { value: 'quarter', label: 'L/4, 3L/4 (Bảng I, Fig. 2)' },
-          ]}
-        />
         <div className="text-sm">
           <div className="text-slate-600 mb-1">Nhiễu ngẫu nhiên</div>
           <div className="flex gap-2">

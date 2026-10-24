@@ -43,11 +43,6 @@ const ASSUMPTIONS = {
       <TeX>{'L_x = L_y = 500'}</TeX> (L của Bảng I).
     </>
   ),
-  G7: (
-    <>
-      <b>σ của Fig. 5.</b> Bài báo không ghi; demo dùng chung σ với Fig. 2 (Bảng I: <TeX>{'\\sigma = 1/\\sqrt2'}</TeX>).
-    </>
-  ),
 }
 
 function Assumptions({ ids }) {
@@ -158,7 +153,8 @@ function Demo2Theory() {
         <p>
           <b>Dòng 4: đo.</b> Kích hoạt cảm biến và thu <TeX>{'z^t'}</TeX>. Mục IV-C kích hoạt hai cảm biến đối xứng tại{' '}
           <TeX>{'\\{s^t, L^{t-1}-s^t\\}'}</TeX>; mục V dùng <TeX>{'s^t=\\tfrac{L^{t-1}}{2}(\\tfrac12-\\alpha)'}</TeX>, còn Fig. 2
-          dùng <TeX>{'s^t = L^{t-1}/4'}</TeX>.
+          dùng <TeX>{'s^t = L^{t-1}/4'}</TeX>. Demo cố định hai cảm biến tại L/4 và 3L/4 của vùng hiện tại, như ví dụ trong
+          báo cáo.
         </p>
         <p>
           <b>Dòng 5: likelihood (Eq. 4)</b> cho mọi <TeX>{'k\\in\\mathcal H^{t-1}'}</TeX>:
@@ -179,7 +175,8 @@ function Demo2Theory() {
       </DSection>
       <DSection title="Cách đọc Demo 2">
         <p>
-          Mỗi bước được tách thành 4 pha tương ứng dòng 3–6 của Algorithm 1; dòng đang thực hiện được tô sáng. Cột "P_e^t
+          Mỗi bước được tách thành 4 pha tương ứng dòng 3–6 của Algorithm 1; dòng đang thực hiện được tô sáng. Thuật toán chạy
+          tới khi vùng ứng viên chỉ còn 1 điểm. Cột "P_e^t
           lý thuyết" trong bảng tính theo Theorem 1, tức giả định prior đều trên <TeX>{'\\mathcal H^{t-1}'}</TeX>. Ở hình
           2D, chấm càng đậm thì ℓ(k) càng lớn; vòng xanh và cam đánh dấu giả thuyết có ℓ lớn nhất trong H₁ và H₂.
         </p>
@@ -234,7 +231,7 @@ function Demo3Theory() {
       </DSection>
       <DSection title="Cách đọc Demo 3">
         <p>
-          Demo dùng không gian 1D với hai cảm biến, nên không gian đo là mặt phẳng <TeX>{'(z_1,z_2)'}</TeX> như Fig. 6. Mỗi
+          Demo dùng không gian 1D với hai cảm biến cố định tại L/4 và 3L/4, nên không gian đo là mặt phẳng <TeX>{'(z_1,z_2)'}</TeX> như Fig. 6. Mỗi
           chấm to là một <TeX>{'h_k'}</TeX>; màu nền là miền quyết định, vạch trắng là biên các ô Voronoi, đường đỏ đứt là{' '}
           <TeX>{'z_1=z_2'}</TeX>, đoạn đen là <TeX>{'d_k'}</TeX>. Đám mây 350 điểm là các phép đo minh họa{' '}
           <TeX>{'z=h_k+\\eta'}</TeX> của giả thuyết đang chọn, dùng để thấy sự kiện lỗi của Lemma 1 (z rơi vào ô của một
@@ -246,47 +243,9 @@ function Demo3Theory() {
   )
 }
 
-// ---------------- Demo 4: Corollary 2 và Remark 2 (mục IV-C, V) ----------------
-function Demo4Theory() {
-  return (
-    <>
-      <DSection title="Corollary 2: trường hợp 1D (mục IV-C)">
-        <p>
-          Lưới <TeX>{'\\mathcal H^0=\\{(2i-1)L/(2n^{(0)})\\}'}</TeX>, cảm biến tại{' '}
-          <TeX>{'\\{s^t, L^{t-1}-s^t\\}'}</TeX>. (a) Lưới rời rạc với <TeX>{'|\\mathcal H^{t-1}| = n^{(t-1)}'}</TeX>:
-        </p>
-        <TeX block>{'P_e^t=\\frac{2}{n^{(t-1)}}\\sum_{k\\le m^t-\\delta^t\\Delta}Q\\Big(\\frac{d_k}{\\sigma}\\Big),\\qquad d_k=\\tfrac12\\lVert h^t_k-h^t_{(L^{t-1}-k)}\\rVert_2'}</TeX>
-        <p>(b) Giới hạn liên tục khi n → ∞, với <TeX>{'L^t=(\\tfrac12+\\alpha)L^{t-1}'}</TeX>:</p>
-        <TeX block>{'P_e^t=\\frac{2}{L^{t-1}}\\int_0^{L^{t-1}(\\frac12-\\alpha)}Q\\Big(\\frac{\\lVert h^t(x)-h^t(L^{t-1}-x)\\rVert_2}{2\\sigma}\\Big)dx'}</TeX>
-      </DSection>
-      <DSection title="Remark 2: phụ thuộc vào lượng chồng lấn (mục IV-C)">
-        <p>Khi vị trí cảm biến cố định, đạo hàm theo α:</p>
-        <TeX block>{'\\frac{\\partial P_e^t}{\\partial\\alpha}=-2\\,Q\\Big(\\frac{d\\big(L^{t-1}(\\frac12-\\alpha)\\big)}{\\sigma}\\Big),\\qquad d(x)=\\lVert h(x)-h(L^{t-1}-x)\\rVert_2/2'}</TeX>
-        <p>
-          Theo bài báo: vì <TeX>{'d(x)\\ge0'}</TeX>, mức giảm tức thời lớn nhất xảy ra tại α = 0 và bằng{' '}
-          <TeX>{'-2Q(0)=-1'}</TeX>, sau đó chồng lấn thêm cho lợi ích giảm dần.
-        </p>
-      </DSection>
-      <DSection title="Liên hệ với Fig. 2 và Fig. 5 (mục V)">
-        <p>
-          Fig. 2 vẽ <TeX>{'P_e^t'}</TeX> theo α với cảm biến cố định <TeX>{'s^t=L^{t-1}/4'}</TeX>. Bài báo giải thích đoạn
-          gần phẳng ở khoảng α giữa là do cấu hình đặt cảm biến và hàm truyền f(·), và cho thấy lỗi giảm đều khi đặt cảm
-          biến theo α. Fig. 5 vẽ lại với <TeX>{'s^t=\\tfrac{L^{t-1}}{2}(\\tfrac12-\\alpha)'}</TeX>.
-        </p>
-        <p>
-          Tham số (Bảng I): L = 500, P₀ = 20 dB, η = 1, σ = 1/√2, ε = 10, α ∈ [0; 0,5]. Phụ lục D-A ghi α được định
-          nghĩa trong [0, ¼) để bảo đảm hội tụ, nhưng Theorem 1 đúng với α ∈ [0; 0,5], là khoảng dùng cho Fig. 2 và Fig.
-          5.
-        </p>
-      </DSection>
-      <Assumptions ids={['G1', 'G7']} />
-    </>
-  )
-}
 
 export const THEORY = {
   demo1: { key: 'demo1', title: 'Demo 1 · Vấn đề và ý tưởng chồng lấn', content: <Demo1Theory /> },
   demo2: { key: 'demo2', title: 'Demo 2 · Bài toán và Algorithm 1', content: <Demo2Theory /> },
   demo3: { key: 'demo3', title: 'Demo 3 · Lemma 1, Theorem 1, Corollary 1', content: <Demo3Theory /> },
-  demo4: { key: 'demo4', title: 'Demo 4 · Corollary 2 và Remark 2', content: <Demo4Theory /> },
 }
